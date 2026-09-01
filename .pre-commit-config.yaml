@@ -1,0 +1,40 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.5
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: poetry.lock
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.4
+    hooks:
+      - id: bandit
+        files: ^src/
+
+  - repo: local
+    hooks:
+      - id: json-tool
+        name: json.tool (validate + pretty-print)
+        entry: python3 scripts/check_json.py
+        language: system
+        files: \.json$|^\.secrets\.baseline$
+
+      - id: tool-versions-match-poetry
+        name: .tool-versions matches poetry config
+        entry: python3 scripts/check_tool_versions.py
+        language: system
+        files: ^(\.tool-versions|pyproject\.toml|poetry\.lock)$
+        pass_filenames: false
