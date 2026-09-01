@@ -1,6 +1,6 @@
 name: Claude Code Review
 
-on:
+"on":
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
     # Optional: Only run on specific file changes
@@ -19,6 +19,7 @@ jobs:
     #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
 
     runs-on: ubuntu-latest
+    container: debian:bookworm-slim
     permissions:
       contents: read
       pull-requests: read
@@ -26,10 +27,18 @@ jobs:
       id-token: write
 
     steps:
+      - name: Install git, CA certificates, and unzip
+        run: |
+          apt-get update && apt-get install -y --no-install-recommends \
+            git ca-certificates unzip
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-python-poetry
 
       - name: Run Claude Code Review
         id: claude-review
@@ -38,8 +47,9 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
+          # yamllint disable rule:line-length
           prompt: '/code-review:code-review --comment ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
-          claude_args: '--allowedTools "mcp__github_inline_comment__create_inline_comment"'
+          claude_args: '--allowedTools mcp__github_inline_comment__create_inline_comment,Bash(poetry run pytest:*),Bash(poetry run ruff check:*),Bash(poetry run ruff format:*),Bash(poetry run bandit:*),Bash(poetry run coverage:*),Bash(poetry run pre-commit run:*)'
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
-
+          # yamllint enable rule:line-length
