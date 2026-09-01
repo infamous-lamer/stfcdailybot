@@ -1,0 +1,24 @@
+name: pre-commit
+
+"on":
+  pull_request:
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    container: debian:bookworm-slim
+    steps:
+      - name: Install git and CA certificates
+        run: |
+          apt-get update && apt-get install -y --no-install-recommends \
+            git ca-certificates
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-python-poetry
+      # pre-commit/action invokes bare `pre-commit`, so the console scripts
+      # that poetry install just wrote into the asdf-installed Python's
+      # bin/ need a fresh reshim to be reachable as commands.
+      - name: Reshim newly installed console scripts
+        run: asdf reshim python
+      - uses: pre-commit/action@v3.0.1

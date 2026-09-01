@@ -1,0 +1,37 @@
+name: tests
+
+"on":
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  test:
+    name: Run tests & coverage
+    runs-on: ubuntu-latest
+    container: debian:bookworm-slim
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Install git and CA certificates
+        run: |
+          apt-get update && apt-get install -y --no-install-recommends \
+            git ca-certificates
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-python-poetry
+
+      - name: Run tests with coverage
+        run: poetry run coverage run -m pytest -q
+
+      - name: Coverage comment
+        uses: py-cov-action/python-coverage-comment-action@v4.3
+        with:
+          GITHUB_TOKEN: ${{ github.token }}
