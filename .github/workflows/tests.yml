@@ -29,6 +29,8 @@ jobs:
       - uses: ./.github/actions/setup-python-poetry
 
       - name: Run tests with coverage
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
         run: poetry run coverage run -m pytest -q
 
       - name: Coverage comment
