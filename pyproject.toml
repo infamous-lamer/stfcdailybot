@@ -42,6 +42,7 @@ addopts = "--import-mode=importlib"
 [tool.coverage.run]
 source = ["dailies", "discord_bot"]
 relative_files = true
+omit = ["*/discord_bot/main.py"]
 
 [tool.ruff]
 line-length = 110
